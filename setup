@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# modelclone-skills setup — install skills into Cursor / Claude / Codex skill dirs.
+set -euo pipefail
+
+SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ ! -f "$SKILL_DIR/VERSION" ] || [ ! -d "$SKILL_DIR/modelclone-generate" ]; then
+  echo "Run from the skills/ package root (modelclone-generate/ must exist)." >&2
+  exit 1
+fi
+
+VERSION="$(tr -d '[:space:]' < "$SKILL_DIR/VERSION")"
+HOST="${1:-}"
+if [ "$HOST" = "--host" ]; then HOST="${2:-}"; shift 2 || true; fi
+if [ -z "$HOST" ]; then
+  if [ -d "$HOME/.cursor" ]; then HOST="cursor"; fi
+  if [ -d "$HOME/.claude" ] && [ -z "$HOST" ]; then HOST="claude"; fi
+  HOST="${HOST:-cursor}"
+fi
+
+case "$HOST" in
+  cursor) DEST="${CURSOR_SKILLS_DIR:-$PWD/../.cursor/skills}" ;;
+  claude) DEST="$HOME/.claude/skills" ;;
+  codex)  DEST="$HOME/.codex/skills" ;;
+  *) echo "Unknown host: $HOST (use cursor|claude|codex)" >&2; exit 1 ;;
+esac
+
+mkdir -p "$DEST"
+for skill in modelclone-generate modelclone-identity modelclone-creator-studio modelclone-nsfw modelclone-nsfw-video; do
+  rm -rf "$DEST/$skill"
+  cp -R "$SKILL_DIR/$skill" "$DEST/$skill"
+  echo "installed $skill → $DEST/$skill"
+done
+
+echo ""
+echo "ModelClone skills v$VERSION installed for $HOST."
+echo "Next: npm install -g modelclone-cli && modelclone login --key mcl_…"

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://cursor.com/schemas/cursor-plugin/plugin.json",
+  "name": "modelclone",
+  "displayName": "ModelClone",
+  "version": "1.0.0",
+  "description": "Image/video generation, identity models, Creator Studio, and NSFW pipelines via ModelClone CLI and MCP.",
+  "author": {
+    "name": "ModelClone",
+    "email": "support@modelclone.app"
+  },
+  "publisher": "ModelClone",
+  "homepage": "https://modelclone.app",
+  "repository": "https://github.com/mconqeuroror/modelclone-skills",
+  "license": "MIT",
+  "category": "ai-content",
+  "keywords": [
+    "modelclone",
+    "image-generation",
+    "video-generation",
+    "identity-model",
+    "creator-studio",
+    "nsfw",
+    "ai-video",
+    "ai-image",
+    "mcp",
+    "cli"
+  ]
+}
