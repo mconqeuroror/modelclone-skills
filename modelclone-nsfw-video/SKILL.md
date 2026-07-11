@@ -1,5 +1,5 @@
 ---
-version: 1.0.0
+version: 1.1.0
 name: modelclone-nsfw-video
 description: |
   NSFW preset video sessions — preview batch, frame edit, approve, submit.
@@ -15,102 +15,75 @@ allowed-tools: Bash
 
 # ModelClone NSFW Video (preset sessions)
 
-Multi-step session flow: **create → poll previews → select → (optional edit) → approve → submit → poll final**.
+Multi-step session: **create → poll previews → select → (optional edit) → approve → submit → poll final**.
 
-Live presets (2026-07): `frontal-dildo-riding`, `frontal-dildo-riding-static`, `blowjob` — always list fresh ids first.
+State machine: `references/session-state-machine.md`.
 
 ## Step 0 — Bootstrap
 
 ```bash
 modelclone whoami
 modelclone nsfw session presets
+modelclone models get <modelId>
 ```
 
-Use preset **`id`** (UUID from `presets` list), not display `key`, in create body.
+Gates: **modelclone-nsfw** `references/gates.md`. Model needs all three `nsfwRef*` URLs.
 
-**Account gate (live-tested):** model must be `isAIGenerated` (or `nsfwOverride`) **and** have all three NSFW reference URLs (`nsfwRefFaceUrl`, `nsfwRefHalfBodyUrl`, `nsfwRefFullBodyUrl`). Set via `PUT /models/:id` or app NSFW setup. Without refs → `NSFW_REFS_INCOMPLETE`; non-AI model → `NSFW_NOT_VERIFIED`.
+Use preset **`id`** (UUID), not `key`, in create body.
 
 ## UX Rules
 
-1. Narrate step names, not internal pipeline engines.
-2. First preview batch is **free**; regenerate previews costs **20** credits.
-3. Frame edit costs **10** credits.
-4. Final submit: `ceil(durationSeconds × 31.25)` credits — check `durationSeconds` on preset row.
-5. API-key generation rows hide `prompt` — rely on session `previewImageUrls` / `outputUrl`.
+1. Narrate step names only — not internal pipeline engines.
+2. First preview batch is **free**; regenerate = **20** credits.
+3. Frame edit = **10** credits each; one edit in flight at a time.
+4. Before submit, quote final cost: `ceil(durationSeconds × 31.25)` from preset row.
+5. API-key generations hide `prompt` — use session `previewImageUrls` / `outputUrl`.
+6. Never skip approve before submit.
+7. Poll silently; deliver final video URL only.
 
 ## Workflow
 
-### 1. List presets
-
 ```bash
+# 1. List presets
 modelclone nsfw session presets
-```
 
-### 2. Create session
-
-```bash
+# 2. Create
 modelclone nsfw session create \
   --body '{"modelId":"<uuid>","mode":"preset","presetId":"<cpre_id>"}'
-```
 
-Save `sessionId` from response.
-
-### 3. Poll previews
-
-```bash
+# 3. Poll until previewImageUrls.length === 3
 modelclone nsfw session get <sessionId>
-```
 
-Every 3–5s until `previewImageUrls.length === 3`.
-
-### 4. Select preview
-
-```bash
+# 4. Select
 modelclone nsfw session action <sessionId> select-preview \
   --body '{"previewUrl":"https://cdn…/preview-1.png"}'
-```
 
-### 5. (Optional) Edit frame — 10 credits
-
-```bash
+# 5. Optional edit
 modelclone nsfw session action <sessionId> edit-frame \
   --body '{"prompt":"remove necklace, keep everything else identical"}'
-```
 
-Poll session until `currentFrameUrl` updates.
-
-### 6. Approve + submit
-
-```bash
+# 6. Approve + submit
 modelclone nsfw session action <sessionId> approve --body '{}'
 modelclone nsfw session action <sessionId> submit --body '{}'
-```
 
-### 7. Final poll
-
-```bash
-modelclone nsfw session get <sessionId>
-```
-
-Until `status === "completed"`, then:
-
-```bash
+# 7. Final
+modelclone nsfw session get <sessionId>   # until completed
 modelclone gen wait <finalGenerationId>
 ```
 
-## MCP equivalent
-
-`nsfw_video_presets` → `nsfw_video_create_session` → `nsfw_video_get_session` (poll) → `nsfw_video_session_action` (select-preview, edit-frame, approve, submit) → `wait_for_generation`.
-
 ## Recreate mode
 
-`mode: "recreate"` with `uploadedVideoUrl` instead of `presetId` — see `docs/public-api/15-nsfw-video.md`.
+`"mode":"recreate"` + `"uploadedVideoUrl"` (≤15s) — see `docs/public-api/15-nsfw-video.md`.
+
+## MCP
+
+`nsfw_video_presets` → `nsfw_video_create_session` → `nsfw_video_get_session` → `nsfw_video_session_action` → `wait_for_generation`.
 
 ## Reference docs
 
+- `references/session-state-machine.md`
 - `docs/public-api/15-nsfw-video.md`
-- `docs/mcp/sections/13-recipes.md` — Recipe D3
 
 ## Tested recipes
 
-`node scripts/test-modelclone-skills.mjs --live` (preset list smoke)
+`node scripts/test-modelclone-skills.mjs --live` · `scripts/test-nsfw-video-session-full.mjs`

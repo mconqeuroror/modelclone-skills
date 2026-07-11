@@ -1,19 +1,25 @@
 # ModelClone Skills
 
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](./VERSION)
+[![Version](https://img.shields.io/badge/version-1.1.0-green.svg)](./VERSION)
 [![Skills](https://img.shields.io/badge/skills-5-blueviolet.svg)](#skills)
 
 AI agent skills for image and video generation via [ModelClone](https://modelclone.app) — CLI (`modelclone` / `mcl`) and MCP (`https://mcp.modelclone.app/mcp`).
 
-Forked from [higgsfield-ai/skills](https://github.com/higgsfield-ai/skills) *patterns* (interview flows, mode tables, routing rules), rewritten for ModelClone endpoints, and **live-tested** on 2026-07-08.
+Forked from [higgsfield-ai/skills](https://github.com/higgsfield-ai/skills) *patterns*, rewritten for ModelClone endpoints.
+
+## What's new in v1.1.0
+
+- **Creator Studio `enhancePrompt`** — server-side Grok prompt assembly on `POST /generate/creator-studio` (default `false`), with optional `mode`, `scope`, `asset`, `productContext`, `brandContext`
+- **Reference docs** — engine matrix, prompt assembly, interview flows (Types A–F), marketplace orchestration, troubleshooting, unsupported HF features
+- **NSFW** — gates doc, v2 presets catalog, video session state machine
+- **Evals** — `evals/scenarios.md` adapted for ModelClone
+- **Maintainer** — `CLAUDE.md`, expanded COOKBOOK recipes
 
 ## Quick install
 
 ```bash
 npx skills add mconqeuroror/modelclone-skills
 ```
-
-Installs all five skills into your agent directory (Cursor → `.cursor/skills/` or `.agents/skills/`).
 
 ### Prerequisites
 
@@ -23,61 +29,57 @@ modelclone login --key mcl_…
 modelclone whoami
 ```
 
-Get an API key at [modelclone.app](https://modelclone.app) → Settings → API keys.
+**MCP:** `https://mcp.modelclone.app/mcp` + header `X-Api-Key: mcl_…`.
 
-**Optional MCP** (Cursor / Claude Desktop): Streamable HTTP at `https://mcp.modelclone.app/mcp` with header `X-Api-Key: mcl_…`.
-
-### Manual install
-
-Copy the `modelclone-*` skill folders into your project's `.cursor/skills/`, or run:
-
-```bash
-./setup --host cursor
-```
+Manual: `./setup --host cursor` or copy `modelclone-*` into `.cursor/skills/`.
 
 ## Skills
 
 | Skill | When to use |
 |-------|-------------|
-| [`modelclone-generate`](./modelclone-generate) | Recreate, free prompt, motion video, enhance, ModelClone-X |
-| [`modelclone-identity`](./modelclone-identity) | Create AI models (wizard / upload → 3 poses) |
-| [`modelclone-creator-studio`](./modelclone-creator-studio) | Product shots, lifestyle scenes, marketplace cards |
-| [`modelclone-nsfw`](./modelclone-nsfw) | NSFW LoRA images + v2 presets |
-| [`modelclone-nsfw-video`](./modelclone-nsfw-video) | NSFW preset video sessions (preview → submit) |
+| [`modelclone-generate`](./modelclone-generate) | Recreate, free, motion, studio video, MCX |
+| [`modelclone-identity`](./modelclone-identity) | Wizard / upload → 3-pose model |
+| [`modelclone-creator-studio`](./modelclone-creator-studio) | Product shots, marketplace, `enhancePrompt` |
+| [`modelclone-nsfw`](./modelclone-nsfw) | LoRA + v2 stills |
+| [`modelclone-nsfw-video`](./modelclone-nsfw-video) | Preset video sessions |
 
-**Typical chain:** `modelclone-identity` → `modelclone-generate` (or NSFW skills when the model is eligible).
+**Chain:** `modelclone-identity` → `modelclone-generate` (or NSFW skills when eligible).
 
-## Example — candid product UGC (Creator Studio)
-
-For influencer-style product posts, prefer **`gpt-image-2`** with a candid, anti-glamour prompt — not generic “lifestyle / aspirational” language on `wan-2.7-image`.
+## Example — enhancePrompt product pin
 
 ```bash
 modelclone studio image \
-  --prompt "Candid iPhone mirror selfie, blonde woman late 20s after gym, messy ponytail, light sweat, visible skin pores, no makeup, plain grey sports bra, holding exact chocolate-brown Bali Body self tan serum pump bottle with white BALIBODY text, cluttered home gym mirror, uneven fluorescent and window light, off-center framing, unretouched documentary photo, not AI glamour" \
-  --body '{"generationModel":"gpt-image-2","aspectRatio":"3:4","referencePhotos":["https://…/product.png"],"numImages":1}' \
-  --wait --timeout 300
-```
-
-`gpt-image-2` aspect ratios: `auto`, `1:1`, `9:16`, `16:9`, `4:3`, `3:4` (not `4:5`).
-
-## Example — recreate a reference photo
-
-```bash
-modelclone generate recreate \
-  --image-url "https://modelclone.app/og-candidates/studio-ref-her.jpg" \
-  --model "<your-model-uuid>" \
-  --body '{"outfitMode":"source","genModel":"wan-2.7-image"}' \
+  --prompt "cottagecore candle Pinterest pin" \
+  --body '{
+    "generationModel":"gpt-image-2",
+    "aspectRatio":"3:4",
+    "referencePhotos":["https://…/candle.jpg"],
+    "enhancePrompt":true,
+    "mode":"moodboard_pin",
+    "productContext":"soy candle, cream jar",
+    "brandContext":"sage and cream palette"
+  }' \
   --wait
 ```
 
-## Recipes & install details
+## Example — recreate
 
-- [COOKBOOK.md](./COOKBOOK.md) — live-tested recipes (recreate, free, MCX, NSFW video session, etc.)
-- [INSTALL.md](./INSTALL.md) — full install options
+```bash
+modelclone generate recreate \
+  --body '{"modelId":"<uuid>","sourceImageUrl":"https://modelclone.app/og-candidates/studio-ref-her.jpg","outfitMode":"source"}' \
+  --wait
+```
+
+## Docs
+
+- [COOKBOOK.md](./COOKBOOK.md) — recipes including enhancePrompt + marketplace dry-run
+- [INSTALL.md](./INSTALL.md)
+- [CLAUDE.md](./CLAUDE.md) — maintainer guide
+- [evals/scenarios.md](./evals/scenarios.md)
 
 ## Upstream
 
-Adapted from Higgsfield skill *patterns*. **Does not call the Higgsfield API.** See skill mapping in [COOKBOOK.md](./COOKBOOK.md).
+Adapted from Higgsfield skill patterns. **Does not call Higgsfield API.** See `modelclone-generate/references/unsupported-features.md`.
 
 ## License
 

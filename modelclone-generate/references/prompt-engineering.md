@@ -1,55 +1,115 @@
 # Prompt engineering (ModelClone)
 
-Adapted from higgsfield-generate patterns; tuned for ModelClone identity + Creator Studio pipelines.
+Adapted from higgsfield-generate; tuned for ModelClone identity, Creator Studio, and studio video pipelines.
 
 ## Basics
 
-- **Subject + setting + style**: "woman in red trench coat, rainy Tokyo street, neon reflections, cinematic"
+- **Subject + setting + style**: "woman in red trench coat, rainy Tokyo street, neon reflections, cinematic photograph"
 - **Camera**: 35mm, low angle, dolly in, tracking shot
 - **Lighting**: golden hour, rim light, soft window light
-- **Medium**: photograph, editorial, film still
+- **Medium**: photograph, editorial, film still, documentary
 
-Keep prompts under ~1,700 characters for Creator Studio (hard cap 1,800). Recreate `extraGuidance` max 400 chars.
+## Length limits
+
+| Surface | Limit |
+|---------|-------|
+| Creator Studio `prompt` | ≤1,700 recommended, 1,800 hard cap (sentence-truncated) |
+| Recreate `extraGuidance` | 400 chars |
+| WAN negative prompt (studio video) | 500 chars |
+| MCX prompt | check API validation |
+
+When using Creator Studio `enhancePrompt: true`, pass **short intent** only — server expands.
 
 ## Recreate / identity
 
-The model's face/body come from reference photos — prompt describes **what changes**:
+Model face/body come from reference photos — prompt describes **what changes**:
 
-- Good `extraGuidance`: "warmer color grade, slight film grain"
-- Bad: re-describing the entire person (identity is handled by the pipeline)
+- Good `extraGuidance`: "warmer color grade, slight film grain, overcast sky"
+- Bad: re-describing entire person (identity handled by pipeline)
+- Bad: contradicting `outfitMode` ("red dress" when `outfitMode: source` copies inspo outfit)
+
+```bash
+modelclone generate recreate \
+  --body '{
+    "modelId":"<uuid>",
+    "sourceImageUrl":"https://…/inspo.jpg",
+    "outfitMode":"source",
+    "extraGuidance":"cooler tones, subtle film grain",
+    "genModel":"wan-2.7-image"
+  }' \
+  --wait
+```
+
+## Free prompt with enhance
+
+```bash
+modelclone generate enhance \
+  --body '{"prompt":"sunset rooftop portrait","mode":"casual","genModel":"nano-banana-pro","modelLooks":{"gender":"female"}}'
+
+modelclone generate free \
+  --prompt "<enhancedPrompt>" \
+  --body '{"modelId":"<uuid>","enhance":false}' \
+  --wait
+```
+
+Enhance `mode` values: `casual`, `professional`, `creative`, etc. — identity modes, not product `mode` values.
 
 ## Image-to-image (Creator Studio)
 
 With `inputImageUrl` / `referencePhotos`, describe **edits** not the full scene:
 
-- Good: "transform into anime style, vibrant cel shading"
-- Bad: paragraph re-describing the uploaded photo
+- Good: "shift to autumn palette, add fallen leaves on surface, preserve bottle position"
+- Bad: paragraph re-describing uploaded photo
+
+Product shots: put product facts in `productContext` when using `enhancePrompt`.
 
 ## Image-to-video
 
-Anchor frame via `imageUrl` / `start-image` equivalents. Prompt = **motion**:
+Anchor frame via `imageUrl`. Prompt = **motion only**:
 
-- "camera slowly dollies in, hair moves in breeze"
-- Don't redescribe the static frame.
+- Good: "camera slowly dollies in, hair moves in breeze, soft smile develops"
+- Bad: redescribing static frame subject and wardrobe
+
+Kling multi-shot: `@element` tokens must match `klingElements[].name` definitions.
 
 ## Negative phrasing
 
 Most engines lack `negative_prompt`. Phrase positively:
 
-- "tack sharp" not "no blur"
-- "empty landscape" not "no people"
+- "tack sharp focus throughout" not "no blur"
+- "empty landscape, solitary subject" not "no people"
+- WAN studio video: use `wanNegativePrompt` field when needed (500 char cap)
 
 ## Aspect ratios
 
 | Ratio | Use |
 |-------|-----|
 | `9:16` | Reels, TikTok, stories |
-| `16:9` | Cinematic, YouTube |
-| `1:1` | Feed, profile |
-| `3:4` / `4:3` | Editorial stills |
+| `16:9` | Cinematic, YouTube, hero banners |
+| `1:1` | Feed, profile, marketplace main |
+| `3:4` / `4:5` | Editorial stills, lifestyle product |
+| `2:3` | Pinterest (check model support) |
 
-Confirm per-model allow-list in `docs/public-api/13-creator-studio.md`.
+Confirm per-model allow-list: creator-studio `engine-matrix.md`, identity routes in `docs/public-api/11-image-generation.md`.
+
+## Product / UGC anti-patterns
+
+For influencer-style product posts on `gpt-image-2`:
+
+- Prefer candid, anti-glamour language: "visible pores, uneven light, off-center framing"
+- Avoid generic "lifestyle aspirational" on `wan-2-7-image` when label fidelity matters
+
+See README candid UGC example.
 
 ## Safety
 
-SFW routes block minors and non-AI-generated misuse. NSFW routes require purchase + age confirm + model verification — use **modelclone-nsfw** skills.
+- SFW routes block minors and non-AI-generated misuse
+- NSFW requires purchase + age confirm + model verification — **modelclone-nsfw** skills
+- `nsfwChecker: true` available on WAN / GPT Image 2 in Creator Studio for stricter filtering
+
+## Operational tips
+
+1. One idea per sentence for long prompts — truncation is sentence-boundary aware
+2. Quote display text literally for Ideogram typography modules
+3. Lock brand palette words across carousel/ad pack variants
+4. Poll with `--wait` — don't narrate "checking status" to user

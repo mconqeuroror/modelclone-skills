@@ -1,5 +1,5 @@
 ---
-version: 1.0.0
+version: 1.1.0
 name: modelclone-nsfw
 description: |
   NSFW image generation for verified AI models via ModelClone — classic LoRA
@@ -14,44 +14,42 @@ allowed-tools: Bash
 
 # ModelClone NSFW (images)
 
-Two parallel still pipelines:
+Two parallel still pipelines — pick based on model setup:
 
 | Pipeline | Endpoint | Prerequisite |
 |----------|----------|--------------|
 | **Classic LoRA** | `POST /nsfw/generate` | Trained LoRA (`nsfwUnlocked`) |
-| **v2 fast** | `POST /nsfw-v2/presets` / `undress` / `free-prompt` | NSFW-verified model + 3 NSFW refs |
+| **v2 fast** | `POST /nsfw-v2/*` | NSFW-verified + 3 NSFW refs |
 
-## Step 0 — Bootstrap
+## Step 0 — Gates
 
 ```bash
 modelclone whoami
 modelclone api GET /me/flags
+modelclone models get <modelId>
 ```
 
-Account must pass NSFW gate (purchase + `confirm-adult`). MCP: `confirm_adult` if `NSFW_NEEDS_AGE_CONFIRMATION`.
+All gates: `references/gates.md`. MCP: `confirm_adult` if needed.
 
 ## UX Rules
 
 1. Never surface internal provider/engine names.
-2. Confirm model eligibility before burning credits.
-3. Use `--wait` on all generation submits.
-4. Pace submits 6+ seconds apart.
+2. Run pre-flight checklist in `gates.md` before any submit.
+3. Confirm model eligibility explicitly with user for first NSFW action in session.
+4. Use `--wait` on all generation submits.
+5. Pace submits 6+ seconds apart.
+6. Do not proceed if user has not purchased + confirmed 18+ — explain gate, don't retry blindly.
+7. v2 preset ids must come from live list — never hallucinate ids.
 
-## Classic LoRA workflow
+## Classic LoRA
 
-1. **Train** (long-running)
-   ```bash
-   modelclone nsfw train-lora --body '{"modelId":"<uuid>",…}'
-   modelclone nsfw training-status <modelId>
-   ```
-2. **Generate**
-   ```bash
-   modelclone nsfw generate \
-     --body '{"modelId":"<uuid>","prompt":"<triggerWord> …","quantity":1}' \
-     --wait
-   ```
-
-MCP: `nsfw_train_lora` → `nsfw_training_status` → `nsfw_generate` → `wait_for_generation`. v2 routes use `api_v1_request` (`POST /nsfw-v2/presets`, `/nsfw-v2/undress`, `/nsfw-v2/free-prompt`) — no typed MCP tool yet.
+```bash
+modelclone nsfw train-lora --body '{"modelId":"<uuid>",…}'
+modelclone nsfw training-status <modelId>
+modelclone nsfw generate \
+  --body '{"modelId":"<uuid>","prompt":"<triggerWord> …","quantity":1}' \
+  --wait
+```
 
 Default **30** credits/image ( **50** for `quantity: 2`).
 
@@ -63,42 +61,22 @@ modelclone nsfw v2-preset \
   --wait
 ```
 
-210 preset ids — see `docs/public-api/14-nsfw.md`. Default **6** credits/image.
-
-List presets via app docs or `modelclone api GET /nsfw-v2/presets` if exposed.
-
-## v2 undress
-
-```bash
-modelclone nsfw v2-undress \
-  --body '{"modelId":"<uuid>","sourceImageUrl":"https://…","aspectRatio":"9:16"}' \
-  --wait
-```
-
-Default **15** credits.
-
-## v2 free prompt
-
-```bash
-modelclone nsfw v2-free \
-  --body '{"modelId":"<uuid>","prompt":"…","aspectRatio":"9:16","count":1}' \
-  --wait
-```
+Catalog + undress + free: `references/v2-presets.md`.
 
 ## Errors
 
 | Code | Fix |
 |------|-----|
 | `NSFW_NEEDS_PURCHASE` | purchase credits/subscription |
-| `NSFW_NEEDS_AGE_CONFIRMATION` | `modelclone api POST /auth/confirm-adult` |
-| `NSFW_NOT_VERIFIED` | support verification for v2/video |
-| `NSFW_REFS_INCOMPLETE` | upload 3 NSFW reference photos |
-| LoRA not ready | wait for training or re-train |
+| `NSFW_NEEDS_AGE_CONFIRMATION` | `confirm-adult` |
+| `NSFW_NOT_VERIFIED` | support verification |
+| `NSFW_REFS_INCOMPLETE` | 3 NSFW reference photos |
 
 ## Reference docs
 
+- `references/gates.md`
+- `references/v2-presets.md`
 - `docs/public-api/14-nsfw.md`
-- `docs/mcp/sections/13-recipes.md` — Recipes D, D2
 
 ## Tested recipes
 

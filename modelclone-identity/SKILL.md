@@ -1,5 +1,5 @@
 ---
-version: 1.0.0
+version: 1.1.0
 name: modelclone-identity
 description: |
   Create and manage ModelClone AI models — reusable identity for recreate/free/NSFW.
@@ -15,7 +15,7 @@ allowed-tools: Bash
 
 # ModelClone Identity
 
-Create a face/body-faithful AI model. One-time setup → reusable `modelId` across all generation skills.
+Create a face/body-faithful AI model. One-time setup → reusable `modelId` across generation skills.
 
 ## Step 0 — Bootstrap
 
@@ -28,61 +28,49 @@ Abort if `canCreateMore` is false.
 
 ## UX Rules
 
-1. Be concise. Say "Model `<name>` ready" — avoid dumping UUIDs unless the user needs them for automation.
+1. Say "Model `<name>` ready" — avoid dumping UUIDs unless user needs automation.
 2. Detect language; CLI flags stay English.
-3. Ask for smallest input set: name + path (niche wizard **or** 3 uploads).
+3. Smallest input set: name + path (niche wizard **or** 3 uploads).
 4. Polling is silent — pose generation takes 1–3 minutes.
+5. Verify three pose URLs before declaring ready.
+6. Never impersonate real people — virtual AI creators only.
 
 ## Paths
 
-| Path | Cost (defaults) | Best for |
-|------|-----------------|----------|
-| **Wizard niche** (recommended) | **Free** | New virtual creators |
+| Path | Cost | Best for |
+|------|------|----------|
+| **Wizard niche** | Free | New virtual creators |
 | Custom description | Free (+10 regen) | Specific look from text |
 | Upload 3 photos | Free | User has reference shots |
-| Classic reference + poses | 900 credits | Legacy / explicit control |
+| Classic reference + poses | 900 credits | Legacy only |
 
-## Workflow — wizard niche (free)
-
-1. **Look variants**
-   ```bash
-   modelclone wizard look-variants \
-     --body '{"gender":"female","age":24,"nicheName":"Fitness","ethnicity":"Latina"}'
-   ```
-2. **Preview images** — pick one variant label from step 1
-   ```bash
-   modelclone wizard preview-images \
-     --body '{"gender":"female","age":24,"nicheName":"Fitness","variants":[{"label":"Soft","looks":{"gender":"female","ethnicity":"Latina","hairColor":"Dark Brown","bodyType":"Athletic"}}]}'
-   ```
-   Save `previews[0].referenceUrl`.
-3. **Finalize poses** (async)
-   ```bash
-   modelclone wizard finalize-poses \
-     --body '{"name":"FitCreator24","referenceUrl":"https://…","gender":"female","age":24,"ethnicity":"Latina","hairColor":"Dark Brown","bodyType":"Athletic"}'
-   ```
-4. **Poll**
-   ```bash
-   modelclone models status <modelId>
-   ```
-   Every 3–5s until `status === "ready"`.
-5. **Verify**
-   ```bash
-   modelclone models get <modelId>
-   ```
-   Confirm `photo1Url`, `photo2Url`, `photo3Url`.
-
-MCP chain: `wizard_look_variants` → `wizard_preview_images` → `wizard_finalize_poses` → `models_status` → `get_model`.
-
-## Workflow — upload photos
-
-Upload each photo, then:
+## Wizard niche (free)
 
 ```bash
+modelclone wizard look-variants \
+  --body '{"gender":"female","age":24,"nicheName":"Fitness","ethnicity":"Latina"}'
+
+modelclone wizard preview-images \
+  --body '{"gender":"female","age":24,"nicheName":"Fitness","variants":[{"label":"Soft","looks":{…}}]}'
+
+modelclone wizard finalize-poses \
+  --body '{"name":"FitCreator24","referenceUrl":"https://…","gender":"female",…}'
+
+modelclone models status <modelId>   # poll until ready
+modelclone models get <modelId>      # verify photo1–3 URLs
+```
+
+MCP: `wizard_look_variants` → `wizard_preview_images` → `wizard_finalize_poses` → `models_status` → `get_model`.
+
+## Upload photos
+
+```bash
+modelclone upload ./pose1.jpg   # repeat for 3 poses
 modelclone wizard upload-save \
   --body '{"name":"MyModel","photoUrls":["https://…/1.jpg","https://…/2.jpg","https://…/3.jpg"]}'
 ```
 
-Poll `models status` as above.
+Photo quality: `references/photo-guide.md`.
 
 ## Use the model
 
@@ -91,22 +79,15 @@ modelclone generate recreate --body '{"modelId":"<uuid>","sourceImageUrl":"https
 modelclone generate free --prompt "…" --body '{"modelId":"<uuid>"}' --wait
 ```
 
-## NSFW unlock (separate skill)
+## NSFW unlock
 
-Classic NSFW needs LoRA training (`modelclone nsfw train-lora`). v2 / video need NSFW reference photos + verification — see **modelclone-nsfw**.
-
-## Errors
-
-| Symptom | Fix |
-|---------|-----|
-| `canCreateMore: false` | delete unused model or upgrade plan |
-| `status: failed` on poll | re-run finalize or contact support |
-| 401 | `modelclone login` |
+Separate skill — classic LoRA or v2 refs. SFW poses ≠ NSFW refs.
 
 ## Reference docs
 
-- `references/photo-guide.md` — upload quality (from higgsfield-soul-id, adapted)
-- `docs/mcp/sections/13-recipes.md` — Recipe F (wizard end-to-end)
+- `references/photo-guide.md`
+- `references/troubleshooting.md`
+- `docs/mcp/sections/13-recipes.md` — Recipe F
 
 ## Tested recipes
 

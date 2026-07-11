@@ -1,5 +1,5 @@
 ---
-version: 1.0.0
+version: 1.1.0
 name: modelclone-creator-studio
 description: |
   Brand-quality and marketplace-style product imagery via Creator Studio
@@ -17,7 +17,10 @@ allowed-tools: Bash
 
 # ModelClone Creator Studio (product & marketplace)
 
-Professional product/brand stills through `modelclone studio image`. Unlike Higgsfield, ModelClone has **no hidden prompt-enhancer endpoint** — use structured mode templates in `references/mode-templates.md` and optional `generate enhance` for polish.
+Professional product/brand stills through `modelclone studio image`. Two prompt paths:
+
+1. **Manual assembly** — expand `references/mode-templates.md` with interview answers (default, no extra credits).
+2. **Server enhancer** — set `enhancePrompt: true` in the request body; Grok assembles a production prompt from your short intent + optional `mode` / `scope` / `asset` / `productContext` / `brandContext` (adds `enhancePromptDefault` credits from `modelclone pricing`).
 
 ## Step 0 — Bootstrap
 
@@ -30,11 +33,12 @@ modelclone pricing
 
 1. Print only `outputUrl` list in final reply.
 2. Detect language; mode names stay English.
-3. Ask at most 4 short questions before submitting (see interview types below).
+3. Ask at most 4 short questions before submitting — see `references/interview-flows.md`.
 4. Upload product photos via `modelclone upload` when user has local files.
 5. Use `--wait` on every submit.
+6. When `enhancePrompt: true`, pass a **short user-intent** prompt (1–2 sentences); do not hand-write the final 1,700-char prompt — the server assembles it.
 
-## Modes (ported from higgsfield-product-photoshoot)
+## Modes
 
 | Mode | When user wants… |
 |------|------------------|
@@ -43,55 +47,65 @@ modelclone pricing
 | `closeup_product_with_person` | Hands / partial face demonstrating product |
 | `moodboard_pin` | Vertical 2:3 Pinterest aesthetic |
 | `hero_banner` | Wide website / email header |
-| `social_carousel` | Multi-slide connected post (use `numImages` 3–10) |
+| `social_carousel` | Multi-slide connected post (`numImages` 3–10) |
 | `ad_creative_pack` | Coordinated static ad variants (`numImages` 3–6) |
 | `virtual_model_tryout` | Product on AI model body |
 | `conceptual_product` | Surreal / levitating / splash CGI |
-| `restyle` | New aesthetic on existing shot (`inputImageUrl` + remix prompt) |
+| `restyle` | New aesthetic on existing shot (`inputImageUrl`) |
 
-## Marketplace scopes (ported from higgsfield-marketplace-cards)
+## Marketplace scopes
 
-| Scope | ModelClone approach |
-|-------|---------------------|
-| `main` | 1× `gpt-image-2` or `ideogram-v3-text`, 1:1, compliance prompt |
-| `product-images` | main + 5 secondaries (`numImages` loop or batch) |
-| `aplus` | main + 7 module prompts (sequential submits, 6s gap) |
-| `full-set` | product-images + aplus assets |
+| Scope | Creates |
+|-------|---------|
+| `main` | 1× compliant main image |
+| `product-images` | main + 5 secondaries |
+| `aplus` | main + 7 A+ modules |
+| `full-set` | product-images + aplus |
 
-See `references/marketplace-assets.md` for per-asset prompt stems.
+Orchestration: `references/marketplace-assets.md`. Pass `scope` + `asset` with `enhancePrompt: true` for server-side assembly.
 
-## Mode selection
+## Generation — manual prompts
 
-Same tie-breakers as higgsfield-product-photoshoot:
-
-- Pinterest + kitchen scene → `moodboard_pin`
-- Hero banner showing product in use → `hero_banner`
-- Carousel of scenes → `social_carousel`
-
-## Pre-generation interview
-
-**Type A** — uploaded product, "make photoshoots": count, style, channel, brand colors.
-
-**Type B** — named use case ("Pinterest pin"): only count + hook/mood.
-
-**Type C** — text only: urge upload; else describe product + style.
-
-**Type D** — restyle existing image: aesthetic + season + preserve/change.
-
-**Type E** — virtual try-on: model archetype, environment, framing.
-
-## Generation
-
-Build prompt from `references/mode-templates.md` + user interview answers.
+Build prompt from `references/mode-templates.md` + interview answers.
 
 ```bash
 modelclone studio image \
-  --prompt "<assembled prompt from mode-templates.md>" \
+  --prompt "cold-brew bottle on sunlit kitchen counter, IG feed" \
   --body '{"generationModel":"gpt-image-2","aspectRatio":"4:5","referencePhotos":["https://…/product.jpg"],"numImages":3}' \
   --wait
 ```
 
-**Engine picks:**
+## Generation — server enhancer (v1.1)
+
+```bash
+modelclone studio image \
+  --prompt "cottagecore candle pin for Pinterest" \
+  --body '{
+    "generationModel":"gpt-image-2",
+    "aspectRatio":"2:3",
+    "referencePhotos":["https://…/candle.jpg"],
+    "enhancePrompt":true,
+    "mode":"moodboard_pin",
+    "productContext":"soy candle, matte cream jar, eucalyptus label",
+    "brandContext":"muted sage and cream palette, quiet luxury"
+  }' \
+  --wait
+```
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `enhancePrompt` | No | Default `false`. When `true`, runs per-model Grok enhancer before submit. |
+| `mode` | No | Creative mode hint — only used when `enhancePrompt: true`. |
+| `scope` | No | `main` \| `product-images` \| `aplus` \| `full-set` — marketplace hint. |
+| `asset` | No | Per-asset label, e.g. `main_image`, `aplus_features`. |
+| `productContext` | No | Product name / material / color for enhancer. |
+| `brandContext` | No | Brand adjectives / palette for enhancer. |
+
+On enhancer failure, enhance credits are refunded and the raw `prompt` is used. See `references/prompt-assembly.md`.
+
+MCP: `creator_studio_image` with the same body fields.
+
+## Engine picks
 
 | Need | `generationModel` |
 |------|-------------------|
@@ -101,9 +115,11 @@ modelclone studio image \
 | Highest still quality | `nano-banana-pro` |
 | Edit existing shot | `seedream-v4-5-edit` with `inputImageUrl` |
 
+Full aspect/resolution matrix: `references/engine-matrix.md`.
+
 ## Multi-variant
 
-`numImages` 1–4 per request (each billed separately). For carousel >4, run multiple submits with varied prompt suffixes from templates.
+`numImages` 1–4 per request (each billed separately). For carousel >4 or `full-set`, run sequential submits with 6s gap — see marketplace orchestration doc.
 
 ## Delivering results
 
@@ -116,13 +132,17 @@ modelclone studio image \
 
 ## What this skill does NOT do
 
-- Marketing Studio UGC **video** — use `modelclone-generate` + `studio video`
+- Marketing Studio UGC **video** (Higgsfield-only) — use `modelclone-generate` + `studio video`
 - Identity-locked model photos — use `generate recreate` / `generate free`
+- Single-command marketplace bundle CLI (Higgsfield `marketplace-cards create`) — orchestrate multiple `studio image` submits
 
 ## Reference docs
 
-- `references/mode-templates.md`
-- `references/marketplace-assets.md`
+- `references/interview-flows.md` — Types A–F
+- `references/mode-templates.md` — manual prompt stems + worked examples
+- `references/prompt-assembly.md` — `enhancePrompt` + mode assembly
+- `references/engine-matrix.md` — model × aspect × resolution
+- `references/marketplace-assets.md` — scope orchestration
 - `docs/public-api/13-creator-studio.md`
 
 ## Tested recipes
