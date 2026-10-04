@@ -35,7 +35,7 @@ General video without identity lock — routes to `studio video`.
 1. Start frame? `[Text only / Upload image / Upload video]`
 2. Platform? `[Reels 9:16 / YouTube 16:9 / Square 1:1]`
 3. Duration? Family-specific allow-list
-4. Engine? Default `seedance2` for production; `kling30` for dialogue scenes
+4. Engine? Default `seedance25` for production (`seedance2` = 2.0 variant); `kling30` for dialogue scenes
 
 ## Complete recreation (Type C)
 
@@ -67,11 +67,11 @@ Do not submit until path is clear.
 
 ## HF Marketing Studio equivalent
 
-User asks for "UGC ad from product URL" — **not available** on ModelClone. Honest redirect:
+User asks for "UGC ad", "ad video", or "ad from product URL" — route to **modelclone-marketing-studio** (v1.3):
 
-1. Fetch product image manually or ask user to upload.
-2. Use **modelclone-creator-studio** `ad_creative_pack` or `lifestyle_scene` for stills.
-3. Animate best still via `studio video` `seedance2` i2v — manual prompt, no avatar picker.
+1. `modelclone marketing products fetch --url <url> --wait` (or `products create` from uploads).
+2. Optional avatar/hook/setting pickers, then `modelclone marketing generate video --mode ugc …`.
+3. For static ad packs, **modelclone-creator-studio** `ad_creative_pack` remains the stills path.
 
 See `unsupported-features.md`.
 

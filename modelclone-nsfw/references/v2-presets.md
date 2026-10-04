@@ -12,7 +12,7 @@ Pass all gates in `gates.md`. Model must have complete NSFW reference set.
 modelclone api GET /nsfw-v2/presets
 ```
 
-Or browse `docs/public-api/14-nsfw.md` — **210** preset ids (e.g. `lt_01_black_lace_bed`).
+Or browse `docs/public-api/14-nsfw.md` — **222** preset ids (e.g. `lt_01_black_lace_bed`).
 
 MCP: `api_v1_request` — no typed list tool in all MCP builds; CLI `modelclone api` works.
 

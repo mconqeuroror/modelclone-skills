@@ -99,10 +99,10 @@ Optional `integrationCallbackUrl` on create, regenerate-previews, edit-frame, su
 Before submit, read `durationSeconds` from preset row:
 
 ```
-final_cost = ceil(durationSeconds × nsfwVideoPerSec)   # default 31.25/s
+final_cost = ceil(durationSeconds × nsfwVideoPerSec)   # default 78.75/s
 ```
 
-Example: 12s preset → 375 credits final + optional 20 regenerate + 10 per edit.
+Example: 12s preset → 945 credits final + optional 20 regenerate + 10 per edit.
 
 ## Failure recovery
 

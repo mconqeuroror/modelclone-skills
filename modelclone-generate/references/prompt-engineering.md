@@ -2,6 +2,10 @@
 
 Adapted from higgsfield-generate; tuned for ModelClone identity, Creator Studio, and studio video pipelines.
 
+**Realism authority (phone-authenticity, skin/lens/lighting stems, banned AI-look, IDENTITY LOCK, per-engine realism, QA gate):** `realism-playbook.md`.
+
+**Scene-level realism (Soul-style palette, soda hero, three-stage still→video):** `realism-scene-building.md`.
+
 ## Basics
 
 - **Subject + setting + style**: "woman in red trench coat, rainy Tokyo street, neon reflections, cinematic photograph"
@@ -96,7 +100,7 @@ Confirm per-model allow-list: creator-studio `engine-matrix.md`, identity routes
 
 For influencer-style product posts on `gpt-image-2`:
 
-- Prefer candid, anti-glamour language: "visible pores, uneven light, off-center framing"
+- Prefer candid, anti-glamour language: "visible pores, uneven light, off-center framing" — full vocabulary in `realism-playbook.md`
 - Avoid generic "lifestyle aspirational" on `wan-2-7-image` when label fidelity matters
 
 See README candid UGC example.
@@ -113,3 +117,14 @@ See README candid UGC example.
 2. Quote display text literally for Ideogram typography modules
 3. Lock brand palette words across carousel/ad pack variants
 4. Poll with `--wait` — don't narrate "checking status" to user
+5. **Quality first** — do not pick budget/turbo engines unless the user asks (mirrors Higgsfield agent UX)
+6. **Product hero shots** — lock packaging via `referencePhotos` + `productContext`; approve still before Seedance i2v (see `realism-scene-building.md`)
+
+## Branded product still (condensed)
+
+When the user wants Higgsfield-card beverage/CPG quality:
+
+- `productContext`: explicit “do not redesign label/shape”
+- `brandContext`: HEX palette + ad register (premium, golden hour, etc.)
+- Still: `seedream-5-pro` (`quality: high`) or `nano-banana-pro` @ `2K`/`4K`
+- Video: `seedance25` / `seedance2` i2v with **motion-only** prompt after still approval

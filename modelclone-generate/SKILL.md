@@ -1,5 +1,5 @@
 ---
-version: 1.1.0
+version: 1.3.0
 name: modelclone-generate
 description: |
   Generate images and videos via ModelClone public API (CLI `modelclone` or MCP).
@@ -36,9 +36,11 @@ If 401: `modelclone login --key mcl_…` / `MODELCLONE_API_KEY`.
 1. Print `outputUrl` for completed generations — no raw pipeline JSON.
 2. No internal provider names in user-facing text (API sanitizes `engine`).
 3. Detect user language; CLI flags stay English.
-4. One missing input at a time. Default quality unless user asks cheaper.
+4. One missing input at a time. **Default quality** — do not downgrade to budget/turbo engines unless the user asks for cheaper/faster (Higgsfield parity).
 5. Always `--wait` on submit commands.
 6. Never invent engine names — verify via `modelclone pricing`.
+7. Hero stills and branded product work: run the **three-stage chain** (concept → approve still → motion-only video). See `references/realism-scene-building.md`.
+8. Photoreal people/UGC: use the realism stems and QA gate in `references/realism-playbook.md` — no sampler knobs exist, realism is prompt discipline.
 
 ## Discovery
 
@@ -56,7 +58,7 @@ Poll: `modelclone gen wait <id>` or MCP `wait_for_generation`.
 | Free prompt + identity | `generate free` | `nano-banana-pro` |
 | Motion still + clip | `generate motion` | per-second motion-X |
 | General image (no model) | `studio image` | see **modelclone-creator-studio** |
-| General video | `studio video` | `seedance2` for production |
+| General video | `studio video` | `seedance25` for production (`seedance2` = 2.0 variant) |
 | Uncensored txt2img | `mcx generate` | preOptimized |
 | Improve identity prompt | `generate enhance` | sync |
 
@@ -107,6 +109,8 @@ Print `outputUrl` + one line (type, credits). On failure: `errorMessage` only �
 
 ## Reference docs
 
+- `references/realism-playbook.md` — realism authority: phone-authenticity cues, skin/lens/lighting stems, banned AI-look table, IDENTITY LOCK, per-engine realism, QA gate
+- `references/realism-scene-building.md` — scene/pipeline level: quality-first routing, three-stage chain (concept → approve still → motion-only video), branded product lock
 - `references/model-routing.md`
 - `references/prompt-engineering.md`
 - `references/video-workflows.md`

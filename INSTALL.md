@@ -1,12 +1,19 @@
 # Install ModelClone Skills
 
-Five skills ship in this package:
+Eleven skills ship in this package:
 
 - **`modelclone-generate`** — recreate, free prompt, motion video, enhance, ModelClone-X
 - **`modelclone-identity`** — wizard / upload → reusable `modelId`
 - **`modelclone-creator-studio`** — product & marketplace stills via Creator Studio
 - **`modelclone-nsfw`** — LoRA + v2 NSFW stills
 - **`modelclone-nsfw-video`** — preset video sessions
+
+- **`modelclone-marketing-studio`** — Conversational branded ad production
+- **`modelclone-ad-copywriting`** — Natural exact spoken ad copy
+- **`modelclone-ad-direction`** — Staging, physical continuity, media QA and finishing
+- **`modelclone-brand-building`** — Brand strategy, positioning and channel briefs
+- **`modelclone-logo-design`** — Owned-logo applications and requested logo concepts
+- **`modelclone-social-content`** — Hooks, posts, Reels, graphics and measurement
 
 They chain: `modelclone-identity` → `modelclone-generate` (or NSFW skills when the model is eligible).
 

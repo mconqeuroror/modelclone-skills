@@ -1,5 +1,5 @@
 ---
-version: 1.1.0
+version: 1.3.0
 name: modelclone-nsfw-video
 description: |
   NSFW preset video sessions — preview batch, frame edit, approve, submit.
@@ -36,7 +36,7 @@ Use preset **`id`** (UUID), not `key`, in create body.
 1. Narrate step names only — not internal pipeline engines.
 2. First preview batch is **free**; regenerate = **20** credits.
 3. Frame edit = **10** credits each; one edit in flight at a time.
-4. Before submit, quote final cost: `ceil(durationSeconds × 31.25)` from preset row.
+4. Before submit, quote final cost: `ceil(durationSeconds × nsfwVideoPerSec)` from `GET /pricing/generation` (default **78.75**/s).
 5. API-key generations hide `prompt` — use session `previewImageUrls` / `outputUrl`.
 6. Never skip approve before submit.
 7. Poll silently; deliver final video URL only.

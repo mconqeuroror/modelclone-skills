@@ -1,6 +1,6 @@
 # Scenarios — ModelClone Skills
 
-11 starter scenarios across 5 skills. Run in a fresh session with skills installed (`npx skills add mconqeuroror/modelclone-skills` or `./setup`).
+13 starter scenarios across 5 skills. Run in a fresh session with skills installed (`npx skills add mconqeuroror/modelclone-skills` or `./setup`).
 
 Each scenario: one user request → expected agent behavior → pass criteria.
 
@@ -103,8 +103,8 @@ Each scenario: one user request → expected agent behavior → pass criteria.
 
 - `scope: main`, `asset: main_image`.
 - `generationModel: gpt-image-2`, `aspectRatio: 1:1`.
-- `enhancePrompt: true` with `productContext` from interview.
-- Single submit — does not promise HF one-shot `marketplace-cards create`.
+- Uses one-shot `modelclone marketplace create --scope main` (or MCP `creator_studio_marketplace`).
+- Passes `productContext`; quotes the live estimate before any multi-asset scope.
 
 **Score:** Pass = compliant main routing. Partial = wrong aspect/engine.
 
@@ -191,7 +191,7 @@ Each scenario: one user request → expected agent behavior → pass criteria.
 
 ---
 
-## Scenario 12 — enhancePrompt studio (creator-studio v1.1)
+## Scenario 12 — enhancePrompt studio (creator-studio v1.2)
 
 **User request:**
 
@@ -207,16 +207,35 @@ Each scenario: one user request → expected agent behavior → pass criteria.
 
 ---
 
+## Scenario 13 — Marketplace full set (creator-studio v1.2)
+
+**User request:**
+
+> Build the full Amazon listing image set for this serum. [product.jpg]
+
+**Expected behavior:**
+
+- Uploads the local image first when needed.
+- Confirms `scope: full-set` means 13 assets.
+- Fetches live pricing and quotes `creatorStudioGptImage2 × 13 + enhancePromptDefault`.
+- Waits for user approval, then calls `modelclone marketplace create --scope full-set --wait` once.
+- Delivers 13 URLs labeled by asset; does not hand-orchestrate 13 separate commands.
+
+**Score:** Pass = approval + one-shot command + labeled outputs. Fail = silent expensive burn or manual 13-command loop.
+
+---
+
 ## Round template
 
 ```
 Round: <N>
 Date: <YYYY-MM-DD>
-Skills version: 1.1.0
+Skills version: 1.3.0
 
 Scenario 1: pass | partial | fail — <reason>
 …
 Scenario 12: ...
+Scenario 13: ...
 
 Aggregate: <P pass / Q partial / F fail>
 Notable regressions: <list>

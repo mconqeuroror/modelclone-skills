@@ -1,15 +1,24 @@
 # Media inputs — ModelClone CLI / MCP
 
-All generation endpoints require **public HTTPS** URLs unless using multipart upload routes. Local files must be uploaded first.
+All generation endpoints require **public HTTPS** URLs. Local files, chat attachments, and remote links are all uploadable — never tell the user their file "cannot be used".
 
 ## Upload flow
 
+Pick by where the file lives:
+
+| Source | CLI | MCP |
+|--------|-----|-----|
+| Local file on disk | `modelclone upload ./photo.jpg` | `api_v1_request` multipart not needed — use base64 below |
+| **Attached to the chat / agent context** | — | `upload_media` (base64Data or dataUrl + fileName) |
+| Remote link (website/CDN asset) | `modelclone upload from-url --url https://…` | `upload_from_url` (server mirrors it into ModelClone storage) |
+
 ```bash
 modelclone upload ./photo.jpg
-# → { "publicUrl": "https://storage.modelclone.app/…" }
+# → { "url": "https://storage.modelclone.app/…" }
+modelclone upload from-url --url https://shop.example.com/images/vial.png
 ```
 
-Use `publicUrl` in JSON body fields. MCP has no dedicated upload tool — use CLI or `POST /upload/presign` via `api_v1_request`.
+Use the returned `url` in JSON body fields. `upload_media` caps at ~3.5 MB binary (JSON limit) — for bigger files use `upload_from_url` or CLI multipart.
 
 ## Field mapping by workflow
 
@@ -101,6 +110,8 @@ Reference in Seedance prompt: `@studio_backdrop`.
 
 | HF pattern | ModelClone |
 |------------|------------|
-| CLI auto-upload from `--image` path on every command | `modelclone upload` first, then URL in `--body` |
+| CLI auto-upload from `--image` path on every command | Marketing/marketplace commands auto-upload `--image`; elsewhere `modelclone upload` first, then URL in `--body` |
 | Upload UUID as job reference everywhere | Use generation `outputUrl` or explicit URL |
 | Virality Predictor `--video` analysis | Not available — see `unsupported-features.md` |
+
+Chat-attached files over MCP: `upload_media`. Remote links: `upload_from_url`. Both return hosted URLs usable everywhere.

@@ -1,5 +1,5 @@
 ---
-version: 1.1.0
+version: 1.3.0
 name: modelclone-nsfw
 description: |
   NSFW image generation for verified AI models via ModelClone — classic LoRA

@@ -80,21 +80,24 @@ modelclone generate face-swap \
 ```bash
 modelclone studio video \
   --body '{
-    "family":"seedance2",
+    "family":"seedance25",
     "mode":"i2v",
     "prompt":"she turns toward camera, wind in hair, golden hour",
     "imageUrl":"https://…/start-frame.jpg",
     "durationSeconds":8,
     "seedanceResolution":"720p",
-    "aspectRatio":"9:16",
+    "aspectRatio":"adaptive",
     "seedanceReturnLastFrame":true
   }' \
   --wait
 ```
 
+`seedance25` i2v/first-last-frame tasks require `aspectRatio:"adaptive"` (engine follows the start frame) — a fixed ratio with `imageUrl` fails 422 after submit. t2v takes the full ratio list.
+
 | Need | `family` | `mode` |
 |------|----------|--------|
 | Production i2v/t2v | `seedance2` | `i2v` / `t2v` / `edit` / `multi-ref` |
+| Cheaper native-audio alt | `videox` | `t2v` / `i2v` / `fl2v` / `r2v` (5/10/15s, `videoxQuality` turbo\|quality) |
 | Dialogue / std quality | `kling30` | `t2v` / `i2v` |
 | Fast 5–10s | `kling26` | `t2v` / `i2v` |
 | 8s cinematic | `veo31` | `t2v` / `i2v` / `ref2v` |
@@ -103,7 +106,7 @@ modelclone studio video \
 | Sora | `sora2` | `t2v` / `i2v` |
 | Character/voice refs | `geminiOmni` | `video` / `character` |
 
-Default API `family` is `kling30` — override to `seedance2` for serious motion unless user specifies otherwise.
+Default API `family` is `kling30` — override to `seedance25` for serious motion (`seedance2` keeps the 2.0 variant) unless user specifies otherwise.
 
 ## Veo follow-ups
 
@@ -149,7 +152,7 @@ modelclone studio asset-create \
 
 | HF | ModelClone |
 |----|------------|
-| Marketing Studio `marketing_studio_video` | Manual `studio video` + uploaded product still |
+| Marketing Studio `marketing_studio_video` | `modelclone marketing generate video` (modelclone-marketing-studio skill, v1.3) |
 | `draw_to_video` workflow | No equivalent — use `seedance2` i2v |
 | Virality Predictor on ad clip | Not available |
 

@@ -76,7 +76,7 @@ modelclone studio image \
   --wait
 ```
 
-## Recipe 10 — Creator Studio with enhancePrompt (v1.1)
+## Recipe 10 — Creator Studio with enhancePrompt (v1.2)
 
 **Skill:** `modelclone-creator-studio` · *structural — dry-run OK*
 
@@ -87,61 +87,41 @@ modelclone upload ./candle.jpg   # if local
 
 modelclone studio image \
   --prompt "cottagecore candle pin for Pinterest" \
-  --body '{
-    "generationModel":"gpt-image-2",
-    "aspectRatio":"3:4",
-    "referencePhotos":["https://…/candle.jpg"],
-    "enhancePrompt":true,
-    "mode":"moodboard_pin",
-    "productContext":"soy candle, matte cream jar, eucalyptus label",
-    "brandContext":"muted sage and cream, quiet luxury"
-  }' \
+  --model gpt-image-2 \
+  --enhance \
+  --mode moodboard_pin \
+  --product-context "soy candle, matte cream jar, eucalyptus label" \
+  --brand-context "muted sage and cream, quiet luxury" \
+  --body '{"aspectRatio":"3:4","referencePhotos":["https://…/candle.jpg"]}' \
   --wait
 ```
 
-MCP: `creator_studio_image` with same body. Adds `enhancePromptDefault` credits — check `modelclone pricing`.
+Preview with `modelclone studio enhance` first when the user wants to inspect the rewrite. MCP: typed `creator_studio_image` / `creator_studio_enhance`.
 
 Interview: Type B in `references/interview-flows.md`. Do not paste 1,700-char prompts when enhancer is on.
 
-## Recipe 11 — Marketplace full-set dry-run (v1.1)
+## Recipe 11 — Marketplace full-set one-shot (v1.2)
 
-**Skill:** `modelclone-creator-studio` · *orchestration only — no single CLI bundle*
+**Skill:** `modelclone-creator-studio` · *dry-run verified; optional live burn*
 
-Agent plans 13 submits for `full-set` scope. **Dry-run** before live burn:
+Before the 13-asset `full-set` burn:
 
 1. User confirms scope `full-set` + product photo URL.
-2. Agent prints asset list from `references/marketplace-assets.md`:
-
-```
-main_image → gpt-image-2 1:1
-infographic → ideogram-v3-text
-… (13 total)
-```
-
-3. Estimate credits: `(image + enhancePromptDefault) × 13` from `modelclone pricing`.
-4. User approves → execute sequential submits with 6s gap.
-
-**First live asset (main only):**
+2. Agent prints the 13 labels from `references/marketplace-assets.md`.
+3. Estimate credits: `creatorStudioGptImage2 × 13 + enhancePromptDefault`.
+4. User approves → one command:
 
 ```bash
-modelclone studio image \
-  --prompt "premium serum for Amazon main listing" \
-  --body '{
-    "generationModel":"gpt-image-2",
-    "aspectRatio":"1:1",
-    "referencePhotos":["https://…/serum.jpg"],
-    "enhancePrompt":true,
-    "scope":"main",
-    "asset":"main_image",
-    "productContext":"30ml dropper serum, frosted glass, gold cap",
-    "brandContext":"clinical white and sage green"
-  }' \
-  --wait
+modelclone marketplace create \
+  --prompt "premium skincare serum marketplace listing" \
+  --scope full-set \
+  --image "https://…/serum.jpg" \
+  --product-context "30ml frosted-glass dropper serum, gold cap" \
+  --brand-context "clinical white and sage green" \
+  --wait --timeout 600
 ```
 
-Subsequent assets: same `productContext`/`brandContext`, vary `asset` + short intent prompt.
-
-HF gap: no `marketplace-cards create --scope full-set` — honest orchestration required.
+MCP: `creator_studio_marketplace` → `wait_for_generation` for each labeled id.
 
 ## Recipe 5 — Wizard model (free)
 
@@ -197,20 +177,33 @@ npm run test:skills:nsfw-video
 
 Eval scenarios: `evals/scenarios.md`
 
-## Gaps vs Higgsfield (v1.1)
+## Gaps vs Higgsfield (v1.3)
 
 | Higgsfield feature | ModelClone status |
 |--------------------|-------------------|
-| Product photoshoot backend enhancer | **`enhancePrompt: true`** on creator-studio (v1.1) |
+| Product photoshoot backend enhancer | **`--enhance`** / `studio enhance` on Creator Studio |
 | Identity `generate enhance` | Sync enhancer — separate from studio |
-| Marketing Studio UGC video | `studio video` + manual prompt |
+| Marketing Studio (products, avatars, hooks/settings, 9-mode ad video, ad image) | **`modelclone marketing …`** / `marketing_studio_*` MCP (v1.3) |
+| Marketing Studio ad references / brand kits / DTC ads / Click-to-Ad | Not ported (v2 follow-up) |
 | Virality Predictor | Not available |
 | Soul `--soul-id` | `modelId` + 3 reference photos |
-| `marketplace-cards create` one-shot | Agent orchestrates N submits |
+| `marketplace-cards create` one-shot | **`marketplace create`** / `creator_studio_marketplace` |
 | `higgsfield-websites` | Not ported |
+
+### Recipe — UGC ad video from a product URL (v1.3)
+
+```bash
+modelclone marketing products fetch --url https://shop.example.com/serum --wait
+modelclone marketing avatars list
+modelclone marketing generate video \
+  --prompt "morning-routine testimonial for the serum" \
+  --mode ugc --product-id <product-id> --avatar-id <avatar-id> --avatar-type preset \
+  --hook-id hook_i_was_skeptical --duration 12 --aspect-ratio 9:16 \
+  --wait --timeout 900
+```
 
 ## Next live burns
 
-- Recipe 10 — `enhancePrompt` studio with product ref
-- Recipe 11 — marketplace `main` live (full-set partial)
+- Recipe 10 — `studio enhance` + generation with product ref
+- Recipe 11 — marketplace `main` live (safe one-asset burn)
 - `nsfw v2-preset` on NSFW-verified model

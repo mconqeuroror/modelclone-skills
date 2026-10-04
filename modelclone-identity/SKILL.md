@@ -1,5 +1,5 @@
 ---
-version: 1.1.0
+version: 1.3.0
 name: modelclone-identity
 description: |
   Create and manage ModelClone AI models — reusable identity for recreate/free/NSFW.
@@ -70,7 +70,7 @@ modelclone wizard upload-save \
   --body '{"name":"MyModel","photoUrls":["https://…/1.jpg","https://…/2.jpg","https://…/3.jpg"]}'
 ```
 
-Photo quality: `references/photo-guide.md`.
+Photo quality + diversity matrix + failure modes: `references/photo-guide.md`.
 
 ## Use the model
 

@@ -71,17 +71,18 @@ When user mentions Amazon, Temu, Etsy listing, A+ content:
 3. Brand palette / compliance notes? → `brandContext`
 4. Product photo available? (strongly preferred for `main`)
 
-→ Orchestrate per `marketplace-assets.md`. Use `enhancePrompt: true` with `scope` + per-asset `asset` labels.
+→ Quote the live estimate, ask for approval, then call `modelclone marketplace create --scope <scope>` (or MCP `creator_studio_marketplace`). The backend applies per-asset labels and prompt requirements.
 
 ## After interview — submit checklist
 
-- [ ] `referencePhotos` uploaded if user had local files (`modelclone upload`)
+- [ ] Local references passed with repeatable `--image` flags (CLI auto-uploads)
 - [ ] `mode` set (manual templates or `enhancePrompt` body field)
 - [ ] `productContext` / `brandContext` distilled from answers
 - [ ] `generationModel` + `aspectRatio` from `engine-matrix.md`
 - [ ] `enhancePrompt: true` when user wants HF-style "short intent only"
 - [ ] `--wait` on CLI submit
+- [ ] For marketplace sets, approval captured after quoting `gpt-image-2 × asset count + one enhancer charge`
 
 ## MCP mapping
 
-No separate interview MCP — gather answers in chat, then `creator_studio_image` with assembled body.
+No separate interview MCP — gather answers in chat, then use typed `creator_studio_image` fields for one image or `creator_studio_marketplace` for a coordinated set.
